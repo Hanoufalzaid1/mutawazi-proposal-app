@@ -10,7 +10,7 @@ st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي باستخدام ChatGPT")
 
 # قراءة مفتاح OpenAI API من متغير البيئة الآمن
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 uploaded_file = st.file_uploader("📤 ارفع كراسة الشروط (PDF)", type=["pdf"])
 project_name = st.text_input("📌 اسم المشروع")
