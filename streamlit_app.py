@@ -26,11 +26,10 @@ def extract_text_from_pdf(file):
         text += page.extract_text() + "\n"
     return text
 
-# توليد العرض الفني باستخدام ChatGPT
-@st.cache_data
+# توليد العرض الفني باستخدام ChatGPT (التوافق مع openai>=1.0.0)
 def generate_proposal(content, project, client):
     system_msg = """
-    أنت مساعد محترف متخصص في كتابة العروض الفنية. الرجاء كتابة عرض فني متكامل باللغة العربية لشركة استشارية سعودية تدعى "متوازي".
+    أنت مساعد محترف متخصص في كتابة العروض الفنية. الرجاء كتابة عرض فني متكامل باللغة العربية لشركة استشارية سعودية تدعى \"متوازي\".
     العرض يجب أن يشمل العناصر التالية:
     1. من نحن
     2. رؤيتنا
@@ -49,7 +48,7 @@ def generate_proposal(content, project, client):
     """
     user_msg = f"اسم المشروع: {project}\nاسم الجهة: {client}\nمحتوى الكراسة:\n{content}"
 
-    response = openai.ChatCompletion.create(
+    chat_response = openai.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": system_msg},
@@ -58,7 +57,7 @@ def generate_proposal(content, project, client):
         temperature=0.5,
         max_tokens=3000
     )
-    return response.choices[0].message.content
+    return chat_response.choices[0].message.content
 
 if st.button("🚀 توليد العرض الفني"):
     if uploaded_file and project_name and client_name:
