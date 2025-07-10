@@ -9,9 +9,10 @@ st.set_page_config(page_title="منصة إعداد العروض - متوازي",
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي باستخدام ChatGPT")
 
-# قراءة مفتاح OpenAI API من متغير البيئة الآمن
+# استخدام مفتاح OpenAI من البيئة الآمنة
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
+# رفع الملفات من المستخدم
 uploaded_file = st.file_uploader("📤 ارفع كراسة الشروط (PDF)", type=["pdf"])
 project_name = st.text_input("📌 اسم المشروع")
 client_name = st.text_input("🏛️ اسم الجهة")
@@ -26,10 +27,10 @@ def extract_text_from_pdf(file):
         text += page.extract_text() + "\n"
     return text
 
-# توليد العرض الفني باستخدام ChatGPT (التوافق مع openai>=1.0.0)
+# توليد العرض الفني عبر ChatGPT
 def generate_proposal(content, project, client):
     system_msg = """
-    أنت مساعد محترف متخصص في كتابة العروض الفنية. الرجاء كتابة عرض فني متكامل باللغة العربية لشركة استشارية سعودية تدعى \"متوازي\".
+    أنت مساعد محترف متخصص في كتابة العروض الفنية. الرجاء كتابة عرض فني متكامل باللغة العربية لشركة استشارية سعودية تدعى "متوازي".
     العرض يجب أن يشمل العناصر التالية:
     1. من نحن
     2. رؤيتنا
@@ -49,7 +50,7 @@ def generate_proposal(content, project, client):
     user_msg = f"اسم المشروع: {project}\nاسم الجهة: {client}\nمحتوى الكراسة:\n{content}"
 
     chat_response = openai.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-turbo",
         messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg}
@@ -59,6 +60,7 @@ def generate_proposal(content, project, client):
     )
     return chat_response.choices[0].message.content
 
+# تنفيذ التطبيق
 if st.button("🚀 توليد العرض الفني"):
     if uploaded_file and project_name and client_name:
         with st.spinner("📖 جارٍ قراءة الكراسة وتحليلها..."):
