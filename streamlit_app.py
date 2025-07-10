@@ -3,6 +3,7 @@ from docx import Document
 from PyPDF2 import PdfReader
 import tempfile
 import os
+import openai
 
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 st.title("📄 منصة إعداد العروض - متوازي")
@@ -13,6 +14,9 @@ project_name = st.text_input("📌 اسم المشروع")
 client_name = st.text_input("🏛️ اسم الجهة")
 gov_logo = st.file_uploader("🎖️ شعار الجهة الحكومية (اختياري)", type=["png", "jpg"])
 
+# إعداد مفتاح OpenAI من secrets
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 # استخراج النص من PDF
 @st.cache_data
 def extract_text_from_pdf(file):
@@ -22,25 +26,26 @@ def extract_text_from_pdf(file):
         text += page.extract_text() + "\n"
     return text
 
-# توليد العرض الفني باستخدام نموذج مضمّن محليًا
-from textwrap import dedent
-
-import openai
-import os
-
-openai.api_key = st.secrets["OPENAI_API_KEY"]
-
+# توليد العرض الفني باستخدام OpenAI GPT-4
 def generate_proposal(content, project, client):
+    prompt = f"""
+    قم بكتابة عرض فني احترافي مخصص لمشروع بعنوان "{project}" لصالح جهة اسمها "{client}"، اعتمادًا على الفقرة التالية المقتبسة من كراسة الشروط:
+
+    ---------------------
+    {content[:1500]}
+    ---------------------
+
+    يجب أن يتضمن العرض الفني: من نحن، الرؤية، الرسالة، خدماتنا، فهم المشروع، أهداف المشروع، نطاق العمل، المنهجية، الجدول الزمني، الفريق، المخرجات.
+    اكتب العرض بالعربية بلغة رسمية احترافية.
+    """
+
     response = openai.chat.completions.create(
         model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "أنت خبير في كتابة العروض الفنية لشركات استشارية."},
-            {"role": "user", "content": f"""اكتب عرضًا فنيًا احترافيًا لمشروع بعنوان "{project}" تابع للجهة "{client}"، واستند إلى المعلومات التالية من كراسة الشروط:\n{content[:3000]}"""}
-        ],
-        temperature=0.6,
-        max_tokens=1800,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.5,
+        max_tokens=3000
     )
-    return response.choices[0].message.content
+    return response.choices[0].message.content.strip()
 
 if st.button("🚀 توليد العرض الفني"):
     if uploaded_file and project_name and client_name:
