@@ -3,19 +3,19 @@ from docx import Document
 from PyPDF2 import PdfReader
 import tempfile
 import os
-import openai
+from openai import OpenAI
+from textwrap import dedent
 
+# إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي")
 
+# مدخلات المستخدم
 uploaded_file = st.file_uploader("📤 ارفع كراسة الشروط (PDF)", type=["pdf"])
 project_name = st.text_input("📌 اسم المشروع")
 client_name = st.text_input("🏛️ اسم الجهة")
 gov_logo = st.file_uploader("🎖️ شعار الجهة الحكومية (اختياري)", type=["png", "jpg"])
-
-# إعداد مفتاح OpenAI من secrets
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # استخراج النص من PDF
 @st.cache_data
@@ -26,27 +26,28 @@ def extract_text_from_pdf(file):
         text += page.extract_text() + "\n"
     return text
 
-# توليد العرض الفني باستخدام OpenAI GPT-4
-def generate_proposal(content, project, client):
-    prompt = f"""
-    قم بكتابة عرض فني احترافي مخصص لمشروع بعنوان "{project}" لصالح جهة اسمها "{client}"، اعتمادًا على الفقرة التالية المقتبسة من كراسة الشروط:
+# تهيئة OpenAI
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    ---------------------
-    {content[:1500]}
-    ---------------------
+# توليد العرض الفني باستخدام GPT
+def generate_proposal(content, project, client_name):
+    system_prompt = "أنت مساعد خبير في كتابة العروض الفنية بناءً على كراسة الشروط."
+    user_prompt = f"""هذه كراسة شروط لمشروع جديد: {content}
 
-    يجب أن يتضمن العرض الفني: من نحن، الرؤية، الرسالة، خدماتنا، فهم المشروع، أهداف المشروع، نطاق العمل، المنهجية، الجدول الزمني، الفريق، المخرجات.
-    اكتب العرض بالعربية بلغة رسمية احترافية.
-    """
-
-    response = openai.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.5,
-        max_tokens=3000
+اكتب عرضًا فنيًا متكاملًا باسم المشروع: {project} والجهة: {client_name}، وابدأه بمقدمة من نحن، ثم فهم المشروع، نطاق العمل، المنهجية، الجدول الزمني، الفريق المقترح، والخاتمة.
+"""
+    response = client.chat.completions.create(
+        model="gpt-4-turbo-2024-04-09",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=3000,
+        temperature=0.7
     )
-    return response.choices[0].message.content.strip()
+    return response.choices[0].message.content
 
+# عند الضغط على زر توليد
 if st.button("🚀 توليد العرض الفني"):
     if uploaded_file and project_name and client_name:
         with st.spinner("📖 جارٍ قراءة الكراسة وتحليلها..."):
