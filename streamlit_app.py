@@ -9,8 +9,8 @@ st.set_page_config(page_title="منصة إعداد العروض - متوازي",
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي باستخدام ChatGPT")
 
-# إدخال مفتاح OpenAI API
-openai.api_key = "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"
+# قراءة مفتاح OpenAI API من متغير البيئة الآمن
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 uploaded_file = st.file_uploader("📤 ارفع كراسة الشروط (PDF)", type=["pdf"])
 project_name = st.text_input("📌 اسم المشروع")
