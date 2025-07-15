@@ -1,3 +1,4 @@
+
 import streamlit as st
 from docx import Document
 from PyPDF2 import PdfReader
@@ -10,14 +11,14 @@ from base64 import b64encode
 # إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 
-# تحويل الشعار لصيغة base64
+# تحويل صورة الشعار إلى base64 لعرضها في الزاوية
 def get_base64_logo(image_path):
     with open(image_path, "rb") as image_file:
         return b64encode(image_file.read()).decode()
 
 logo_base64 = get_base64_logo("logo_corner.png")
 
-# إدراج الشعار في أعلى الزاوية اليسرى + تنسيق عام
+# إدراج الشعار والثيم
 st.markdown(
     f"""
     <style>
@@ -97,7 +98,7 @@ def generate_proposal(content, project, client_name):
 
 if st.button("توليد العرض الفني"):
     if uploaded_file and project_name and client_name:
-        with st.spinner("📖 جارٍ قراءة الكراسة وتحليلها..."):
+        with st.spinner("جارٍ قراءة الكراسة وتحليلها..."):
             extracted_text = extract_text_from_pdf(uploaded_file)
             proposal_text = generate_proposal(extracted_text, project_name, client_name)
 
@@ -105,22 +106,25 @@ if st.button("توليد العرض الفني"):
         doc.add_heading(f"العرض الفني لمشروع {project_name}", level=1)
         doc.add_paragraph(f"الجهة: {client_name}")
 
-        for section in proposal_text.split("\n\n"):
-            lines = section.strip().split("\n", 1)
-            if len(lines) == 2:
-                title, content = lines
-                doc.add_heading(title.strip(), level=2)
-                doc.add_paragraph(content.strip())
-            else:
-                doc.add_paragraph(section.strip())
+        for paragraph in proposal_text.split("\n"):
+            line = paragraph.strip()
+            if line.startswith("### "):
+                doc.add_heading(line.replace("### ", ""), level=3)
+            elif line.startswith("## "):
+                doc.add_heading(line.replace("## ", ""), level=2)
+            elif line.startswith("# "):
+                doc.add_heading(line.replace("# ", ""), level=1)
+            elif line:
+                doc.add_paragraph(line)
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
             doc.save(tmp.name)
             tmp_path = tmp.name
 
         with open(tmp_path, "rb") as f:
-            st.download_button(" تحميل العرض الفني (Word)", f, file_name=f"عرض_فني_{project_name}.docx")
+            st.download_button("تحميل العرض الفني (Word)", f, file_name=f"عرض_فني_{project_name}.docx")
 
         st.success("تم توليد العرض الفني بنجاح!")
     else:
         st.error("يرجى تعبئة جميع الحقول المطلوبة.")
+
