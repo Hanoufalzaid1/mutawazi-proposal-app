@@ -5,47 +5,56 @@ import tempfile
 import os
 from openai import OpenAI
 from textwrap import dedent
+from base64 import b64encode
 
 # إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 
-# إدراج CSS: خلفية خضراء + شعار متوازي في الزاوية اليسرى
+# تحميل صورة الشعار (logo_corner.png) وتحويلها إلى base64
+def get_base64_logo(image_path):
+    with open(image_path, "rb") as img_file:
+        encoded = b64encode(img_file.read()).decode()
+        return f"data:image/png;base64,{encoded}"
+
+logo_base64 = get_base64_logo("logo_corner.png")
+
+# إدراج الشعار والثيم
 st.markdown(
-    """
+    f"""
     <style>
-    .stApp {
+    .stApp {{
         background-color: #e6f4ea;
-    }
-    h1 {
+    }}
+    h1 {{
         color: #004d26;
-    }
-    .stTextInput > div > div > input {
+    }}
+    .stTextInput > div > div > input {{
         background-color: #f7fcf9;
         border: 1px solid #aad4bc;
-    }
-    .stDownloadButton button {
+    }}
+    .stDownloadButton button {{
         background-color: #2e7d32;
         color: white;
         border-radius: 8px;
-    }
-    .stButton button {
+    }}
+    .stButton button {{
         background-color: #388e3c;
         color: white;
         border-radius: 8px;
-    }
-    .logo-container {
+    }}
+    .logo-container {{
         position: absolute;
         top: 15px;
         left: 15px;
         z-index: 100;
-    }
-    .logo-container img {
+    }}
+    .logo-container img {{
         width: 80px;
-        opacity: 0.9;
-    }
+        opacity: 0.95;
+    }}
     </style>
     <div class="logo-container">
-        <img src="https://raw.githubusercontent.com/mohmddev/open-data-plugin/main/logo1.png" alt="شعار متوازي">
+        <img src="{logo_base64}" alt="شعار متوازي">
     </div>
     """,
     unsafe_allow_html=True
