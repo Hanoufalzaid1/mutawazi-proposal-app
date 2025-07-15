@@ -10,14 +10,14 @@ from base64 import b64encode
 # إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 
-# تحويل صورة الشعار إلى base64 لعرضها في الزاوية
+# تحويل الشعار لصيغة base64
 def get_base64_logo(image_path):
     with open(image_path, "rb") as image_file:
         return b64encode(image_file.read()).decode()
 
 logo_base64 = get_base64_logo("logo_corner.png")
 
-# إدراج الشعار والثيم
+# إدراج الشعار في أعلى الزاوية اليسرى + تنسيق عام
 st.markdown(
     f"""
     <style>
@@ -43,9 +43,9 @@ st.markdown(
     }}
     .logo-container {{
         position: fixed;
-        bottom: 15px;
-        right: 15px;
-        z-index: 100;
+        top: 0px;
+        left: 0px;
+        z-index: 999;
     }}
     .logo-container img {{
         width: 80px;
@@ -59,17 +59,15 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# عنوان الصفحة
+# الواجهة
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي")
 
-# مدخلات المستخدم
 uploaded_file = st.file_uploader("📤 ارفع كراسة الشروط (PDF)", type=["pdf"])
 project_name = st.text_input("📌 اسم المشروع")
 client_name = st.text_input("🏛️ اسم الجهة")
 gov_logo = st.file_uploader("🎖️ شعار الجهة الحكومية (اختياري)", type=["png", "jpg"])
 
-# استخراج النص من PDF
 @st.cache_data
 def extract_text_from_pdf(file):
     reader = PdfReader(file)
@@ -78,10 +76,8 @@ def extract_text_from_pdf(file):
         text += page.extract_text() + "\n"
     return text
 
-# تهيئة OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# توليد العرض الفني باستخدام GPT
 def generate_proposal(content, project, client_name):
     system_prompt = "أنت مساعد خبير في كتابة العروض الفنية بناءً على كراسة الشروط."
     user_prompt = f"""هذه كراسة شروط لمشروع جديد: {content}
@@ -99,7 +95,6 @@ def generate_proposal(content, project, client_name):
     )
     return response.choices[0].message.content
 
-# عند الضغط على زر توليد
 if st.button("🚀 توليد العرض الفني"):
     if uploaded_file and project_name and client_name:
         with st.spinner("📖 جارٍ قراءة الكراسة وتحليلها..."):
