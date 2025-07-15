@@ -10,11 +10,10 @@ from base64 import b64encode
 # إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 
-# تحميل صورة الشعار (logo_corner.png) وتحويلها إلى base64
+# تحويل صورة الشعار إلى base64 لعرضها في الزاوية
 def get_base64_logo(image_path):
-    with open(image_path, "rb") as img_file:
-        encoded = b64encode(img_file.read()).decode()
-        return f"data:image/png;base64,{encoded}"
+    with open(image_path, "rb") as image_file:
+        return b64encode(image_file.read()).decode()
 
 logo_base64 = get_base64_logo("logo_corner.png")
 
@@ -54,12 +53,13 @@ st.markdown(
     }}
     </style>
     <div class="logo-container">
-        <img src="{logo_base64}" alt="شعار متوازي">
+        <img src="data:image/png;base64,{logo_base64}" alt="شعار متوازي">
     </div>
     """,
     unsafe_allow_html=True
 )
 
+# عنوان الصفحة
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي")
 
