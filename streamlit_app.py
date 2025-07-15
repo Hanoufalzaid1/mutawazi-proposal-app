@@ -8,6 +8,45 @@ from textwrap import dedent
 
 # إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
+
+st.markdown(
+    """
+    <style>
+    /* خلفية الصفحة بالكامل */
+    .stApp {
+        background-color: #e6f4ea;  /* أخضر فاتح */
+    }
+
+    /* عنوان التطبيق */
+    h1 {
+        color: #004d26;
+    }
+
+    /* مربعات الإدخال */
+    .stTextInput > div > div > input {
+        background-color: #f7fcf9;
+        border: 1px solid #aad4bc;
+    }
+
+    /* زر التحميل */
+    .stDownloadButton button {
+        background-color: #2e7d32;
+        color: white;
+        border-radius: 8px;
+    }
+
+    /* زر التوليد */
+    .stButton button {
+        background-color: #388e3c;
+        color: white;
+        border-radius: 8px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي")
 
