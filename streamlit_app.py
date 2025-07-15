@@ -9,43 +9,47 @@ from textwrap import dedent
 # إعداد الصفحة
 st.set_page_config(page_title="منصة إعداد العروض - متوازي", layout="centered")
 
+# إدراج CSS: خلفية خضراء + شعار متوازي في الزاوية اليسرى
 st.markdown(
     """
     <style>
-    /* خلفية الصفحة بالكامل */
     .stApp {
-        background-color: #e6f4ea;  /* أخضر فاتح */
+        background-color: #e6f4ea;
     }
-
-    /* عنوان التطبيق */
     h1 {
         color: #004d26;
     }
-
-    /* مربعات الإدخال */
     .stTextInput > div > div > input {
         background-color: #f7fcf9;
         border: 1px solid #aad4bc;
     }
-
-    /* زر التحميل */
     .stDownloadButton button {
         background-color: #2e7d32;
         color: white;
         border-radius: 8px;
     }
-
-    /* زر التوليد */
     .stButton button {
         background-color: #388e3c;
         color: white;
         border-radius: 8px;
     }
+    .logo-container {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 100;
+    }
+    .logo-container img {
+        width: 80px;
+        opacity: 0.9;
+    }
     </style>
+    <div class="logo-container">
+        <img src="https://raw.githubusercontent.com/mohmddev/open-data-plugin/main/logo1.png" alt="شعار متوازي">
+    </div>
     """,
     unsafe_allow_html=True
 )
-
 
 st.title("📄 منصة إعداد العروض - متوازي")
 st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي")
