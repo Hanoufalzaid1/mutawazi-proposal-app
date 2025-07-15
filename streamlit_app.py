@@ -42,9 +42,9 @@ st.markdown(
         border-radius: 8px;
     }}
     .logo-container {{
-        position: absolute;
-        top: 15px;
-        left: 15px;
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
         z-index: 100;
     }}
     .logo-container img {{
