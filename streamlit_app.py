@@ -4,7 +4,6 @@ from PyPDF2 import PdfReader
 import tempfile
 import os
 from openai import OpenAI
-from textwrap import dedent
 from base64 import b64encode
 
 # إعداد الصفحة
@@ -16,6 +15,41 @@ def get_base64_logo(image_path):
         return b64encode(image_file.read()).decode()
 
 logo_base64 = get_base64_logo("logo_corner.png")
+
+# تحديد اللغة
+lang = st.selectbox("Language / اللغة", ["العربية", "English"])
+
+# نصوص الواجهة حسب اللغة
+TEXTS = {
+    "العربية": {
+        "title": "منصة إعداد العروض - متوازي",
+        "instruction": "قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي",
+        "upload_label": "ارفع كراسة الشروط (PDF)",
+        "project_name": "اسم المشروع",
+        "client_name": "اسم الجهة",
+        "gov_logo": "شعار الجهة الحكومية (اختياري)",
+        "generate_button": "توليد العرض الفني",
+        "loading": "جارٍ قراءة الكراسة وتحليلها...",
+        "download": "تحميل العرض الفني (Word)",
+        "success": "تم توليد العرض الفني بنجاح!",
+        "error": "يرجى تعبئة جميع الحقول المطلوبة.",
+        "doc_heading": "العرض الفني للمشروع"
+    },
+    "English": {
+        "title": "Proposal Generation Platform - Mutawazi",
+        "instruction": "Upload the RFP and a professional technical proposal will be generated",
+        "upload_label": "Upload RFP file (PDF)",
+        "project_name": "Project Name",
+        "client_name": "Client Name",
+        "gov_logo": "Client Logo (optional)",
+        "generate_button": "Generate Proposal",
+        "loading": "Reading and analyzing the document...",
+        "download": "Download Technical Proposal (Word)",
+        "success": "Proposal generated successfully!",
+        "error": "Please fill in all required fields.",
+        "doc_heading": "Technical Proposal for Project"
+    }
+}
 
 # إدراج الشعار والثيم
 st.markdown(
@@ -59,14 +93,14 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# الواجهة
-st.title("منصة إعداد العروض - متوازي")
-st.markdown("قم برفع كراسة الشروط وسيتم توليد عرض فني احترافي")
+# عرض العنوان والنموذج
+st.title(TEXTS[lang]["title"])
+st.markdown(TEXTS[lang]["instruction"])
 
-uploaded_file = st.file_uploader("ارفع كراسة الشروط (PDF)", type=["pdf"])
-project_name = st.text_input("اسم المشروع")
-client_name = st.text_input("اسم الجهة")
-gov_logo = st.file_uploader("شعار الجهة الحكومية (اختياري)", type=["png", "jpg"])
+uploaded_file = st.file_uploader(TEXTS[lang]["upload_label"], type=["pdf"])
+project_name = st.text_input(TEXTS[lang]["project_name"])
+client_name = st.text_input(TEXTS[lang]["client_name"])
+gov_logo = st.file_uploader(TEXTS[lang]["gov_logo"], type=["png", "jpg"])
 
 @st.cache_data
 def extract_text_from_pdf(file):
@@ -78,12 +112,20 @@ def extract_text_from_pdf(file):
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def generate_proposal(content, project, client_name):
-    system_prompt = "أنت مساعد خبير في كتابة العروض الفنية بناءً على كراسة الشروط."
-    user_prompt = f"""هذه كراسة شروط لمشروع جديد: {content}
+def generate_proposal(content, project, client_name, lang):
+    if lang == "العربية":
+        system_prompt = "أنت مساعد خبير في كتابة العروض الفنية بناءً على كراسة الشروط."
+        user_prompt = f"""هذه كراسة شروط لمشروع جديد: {content}
 
 اكتب عرضًا فنيًا متكاملًا باسم المشروع: {project} والجهة: {client_name}، وابدأه بمقدمة من نحن، ثم فهم المشروع، نطاق العمل، المنهجية، الجدول الزمني، الفريق المقترح، والخاتمة.
 """
+    else:
+        system_prompt = "You are an expert assistant for writing professional technical proposals based on an RFP."
+        user_prompt = f"""This is an RFP document: {content}
+
+Write a full technical proposal for the project titled: {project}, and client: {client_name}. Start with a company introduction, then project understanding, scope of work, methodology, timeline, proposed team, and conclusion.
+"""
+
     response = client.chat.completions.create(
         model="gpt-4-turbo-2024-04-09",
         messages=[
@@ -95,15 +137,15 @@ def generate_proposal(content, project, client_name):
     )
     return response.choices[0].message.content
 
-if st.button("توليد العرض الفني"):
+if st.button(TEXTS[lang]["generate_button"]):
     if uploaded_file and project_name and client_name:
-        with st.spinner("جارٍ قراءة الكراسة وتحليلها..."):
+        with st.spinner(TEXTS[lang]["loading"]):
             extracted_text = extract_text_from_pdf(uploaded_file)
-            proposal_text = generate_proposal(extracted_text, project_name, client_name)
+            proposal_text = generate_proposal(extracted_text, project_name, client_name, lang)
 
         doc = Document()
-        doc.add_heading(f"العرض الفني لمشروع {project_name}", level=1)
-        doc.add_paragraph(f"الجهة: {client_name}")
+        doc.add_heading(f"{TEXTS[lang]['doc_heading']} - {project_name}", level=1)
+        doc.add_paragraph(f"{TEXTS[lang]['client_name']}: {client_name}")
 
         for paragraph in proposal_text.split("\n"):
             line = paragraph.strip()
@@ -121,9 +163,8 @@ if st.button("توليد العرض الفني"):
             tmp_path = tmp.name
 
         with open(tmp_path, "rb") as f:
-            st.download_button("تحميل العرض الفني (Word)", f, file_name=f"عرض_فني_{project_name}.docx")
+            st.download_button(TEXTS[lang]["download"], f, file_name=f"Proposal_{project_name}.docx")
 
-        st.success("تم توليد العرض الفني بنجاح!")
+        st.success(TEXTS[lang]["success"])
     else:
-        st.error("يرجى تعبئة جميع الحقول المطلوبة.")
-
+        st.error(TEXTS[lang]["error"])
